@@ -2,6 +2,10 @@
 
 A music quiz you play on a shared screen. Spotify plays through the browser tab, and song details stay hidden until you reveal them. Teams can play **on the host screen** (they call out or write down answers) or **with their phones** (they scan a QR code and type guesses).
 
+[![Walkthrough video: host screen and team phones during a game](docs/walkthrough-poster.jpg)](docs/walkthrough.mp4)
+
+▶ **[Watch the 70-second walkthrough](docs/walkthrough.mp4)**, which shows the host screen and two team phones through a whole game.
+
 ```
 public/index.html   host screen (Spotify, game flow, scoreboard)
 public/play.html    team phone page
