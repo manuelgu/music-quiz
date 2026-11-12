@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121211">
+<title>Music Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#121211; --surface:#1a1a18; --surface2:#232321; --line:#2e2e2b; --line2:#45453f;
+  --text:#ecebe6; --muted:#8e8d86; --accent:#ff5b1f; --accent-hi:#ff7443; --on-accent:#121211;
+  --sans:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{min-height:100dvh;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none !important}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.display{font-weight:800;font-stretch:75%;text-transform:uppercase;line-height:.95;letter-spacing:-.005em}
+.muted{color:var(--muted)}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;border:1px solid var(--line);background:transparent;border-radius:10px;padding:15px 16px;font-weight:600;font-size:17px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.4}
+.input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:15px 14px;outline:none;font-size:18px}
+.input:focus{border-color:var(--muted)}
+.input:disabled{opacity:.6}
+.field{display:flex;flex-direction:column;gap:8px}
+
+.top{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;padding-top:env(safe-area-inset-top);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-stretch:75%;text-transform:uppercase;letter-spacing:.03em;font-size:16px}
+.brand .mark{width:10px;height:10px;background:var(--accent)}
+.top .spacer{flex:1}
+.top .team{font-weight:600;max-width:45vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .pts{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.top .pts b{color:var(--text);font-weight:500}
+.dot{width:8px;height:8px;border-radius:50%;background:#3ccf7a;flex:none}
+.dot.off{background:var(--line2)}
+
+main{flex:1;width:100%;max-width:480px;margin:0 auto;padding:28px 16px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:20px}
+h1{font-size:clamp(44px,13vw,60px);margin:8px 0 0}
+.lead{font-size:17px;line-height:1.5;margin:0}
+.code-input{font-family:var(--mono);text-transform:uppercase;letter-spacing:.3em;font-size:24px;text-align:center}
+.error{color:var(--accent);font-size:15px;min-height:1.2em;margin:0}
+.status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);min-height:20px}
+.status.ok{color:var(--text)}
+.status.ok::before{content:"";width:8px;height:8px;background:var(--accent)}
+
+.big{font-size:clamp(56px,18vw,88px)}
+.locked{border-left:2px solid var(--accent);background:var(--surface);padding:12px 14px;font-size:15px;line-height:1.5}
+
+.results{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.res{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}
+.res .n{font-family:var(--mono);font-size:13px;color:var(--muted);padding-top:3px}
+.res .g{font-size:15px;line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.res .g .label{font-size:11px;margin-right:6px}
+.res .p{display:flex;gap:6px}
+.chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:4px 7px;color:var(--muted)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.res.current{background:var(--surface);margin:0 -16px;padding:14px 16px}
+
+.rank{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.rank div{display:grid;grid-template-columns:36px 1fr auto;gap:10px;padding:14px 0;border-bottom:1px solid var(--line);font-size:18px;font-weight:600}
+.rank div span:first-child{font-family:var(--mono);font-size:14px;color:var(--muted);padding-top:3px}
+.rank div span:last-child{font-family:var(--mono);font-weight:500}
+.rank div.me{color:var(--accent)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);background:var(--text);color:var(--bg);padding:11px 16px;border-radius:8px;font-weight:600;font-size:15px;opacity:0;pointer-events:none;transition:.2s;z-index:10;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.leave{background:none;border:0;padding:0;color:var(--muted);font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;align-self:flex-start;margin-top:auto}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><span class="mark"></span>Music Quiz</div>
+  <div class="spacer"></div>
+  <span class="dot hidden" id="connDot" title="Connection"></span>
+  <span class="team hidden" id="teamName"></span>
+  <span class="pts hidden" id="teamPts"></span>
+</header>
+
+<!-- join -->
+<main id="vJoin" class="hidden">
+  <h1 class="display">Join the quiz</h1>
+  <p class="lead muted">Enter the code shown on the TV and pick a name for your team.</p>
+  <div class="field">
+    <label class="label" for="code">Game code</label>
+    <input id="code" class="input code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+  </div>
+  <div class="field">
+    <label class="label" for="name">Team name</label>
+    <input id="name" class="input" maxlength="24" autocomplete="off" placeholder="The Rockets">
+  </div>
+  <p class="error" id="joinErr"></p>
+  <button class="btn primary" id="joinBtn">Join</button>
+</main>
+
+<!-- waiting / interstitial -->
+<main id="vWait" class="hidden">
+  <div class="label" id="waitLabel"></div>
+  <h1 class="display" id="waitTitle"></h1>
+  <p class="lead muted" id="waitText"></p>
+  <button class="leave" id="leaveBtn">Leave game</button>
+</main>
+
+<!-- guessing -->
+<main id="vGuess" class="hidden">
+  <div class="label" id="songOf"></div>
+  <div class="display big" id="songNo"></div>
+  <div class="field">
+    <label class="label" for="gTitle">Song title</label>
+    <input id="gTitle" class="input" maxlength="120" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next">
+  </div>
+  <div class="field">
+    <label class="label" for="gArtist">Artist</label>
+    <input id="gArtist" class="input" maxlength="120" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
+  </div>
+  <div class="status" id="gStatus"></div>
+  <div class="locked hidden" id="gLocked">Answers for this song are closed.</div>
+  <button class="btn primary" id="gSave">Save guess</button>
+  <p class="muted" style="margin:0;font-size:14px;line-height:1.5" id="gHint">Fill in one or both. You can change your guess until the host moves on.</p>
+</main>
+
+<!-- results (review / each-song reveal / done) -->
+<main id="vResults" class="hidden">
+  <div class="label" id="resLabel"></div>
+  <h1 class="display" id="resTitle"></h1>
+  <div class="rank hidden" id="rank"></div>
+  <div class="label" id="resListLabel" style="margin-top:8px">Your answers</div>
+  <div class="results" id="results"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem('mq.' + k); return v == null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem('mq.' + k, JSON.stringify(v)); }catch{} },
+  del(k){ try{ localStorage.removeItem('mq.' + k); }catch{} }
+};
+let toastT;
+function toast(m, ms = 3000){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+const pad = n => String(n).padStart(2, '0');
+function view(id){ ['vJoin','vWait','vGuess','vResults'].forEach(v => $('#' + v).classList.toggle('hidden', v !== id)); }
+
+let code = (new URLSearchParams(location.search).get('c') || LS.get('lastCode', '') || '').toUpperCase().slice(0, 4);
+let me = null;            // { teamId, token, name }
+let ws = null, pingT = null, retry = 0, pendingName = null, state = null, lastPong = 0;
+let unacked = false;      // a guess was sent but the server hasn't confirmed it yet
+let saveSeq = 0;          // sequence of the last guess sent; only its ack clears "unacked"
+let memKeys = {};         // in-memory fallback when localStorage is blocked (private / in-app browsers)
+let shownSong = null;     // "<gameId>-<song>" whose inputs are on screen
+let dirty = false, saveT = null;
+
+/* ---------- connection ---------- */
+function connect(){
+  if (!code) return showJoin();
+  me = LS.get('team.' + code, null) || (me?.code === code ? me : null);
+  const q = new URLSearchParams({ role: 'team' });
+  if (me) { q.set('id', me.teamId); q.set('token', me.token); }
+  const sock = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/rooms/${code}/ws?${q}`);
+  sock.code = code;
+  ws = sock;
+  sock.onopen = () => {
+    retry = 0; setConn(true); lastPong = Date.now();
+    clearInterval(pingT);
+    pingT = setInterval(() => {
+      if (ws !== sock) return clearInterval(pingT);
+      // No answer for 25s: the connection is dead even if the browser hasn't noticed. Reconnect.
+      if (Date.now() - lastPong > 25000){ clearInterval(pingT); ws = null; setConn(false); try{ sock.close(); }catch{} return connect(); }
+      if (sock.readyState === 1) sock.send('ping');
+    }, 10000);
+    if (!me && pendingName) sock.send(JSON.stringify({ type: 'join', name: pendingName, key: joinKey() }));
+  };
+  sock.onmessage = e => { if (ws !== sock) return; lastPong = Date.now(); if (e.data !== 'pong') onMessage(JSON.parse(e.data)); };
+  sock.onclose = () => {
+    if (ws !== sock) return;
+    setConn(false); clearInterval(pingT); ws = null;
+    // Also retry a join whose reply may have been lost (the join key makes the retry safe).
+    if (me || pendingName) setTimeout(() => !ws && connect(), Math.min(8000, 800 * 2 ** retry++));
+  };
+}
+function send(m){
+  if (ws?.readyState === 1){ ws.send(JSON.stringify(m)); return true; }
+  // Socket died without us noticing (closing/closed): drop it and reconnect right away.
+  if (ws && ws.readyState >= 2 && me){ const w = ws; ws = null; try{ w.close(); }catch{} connect(); }
+  return false;
+}
+function setConn(on){ $('#connDot').classList.toggle('off', !on); }
+// Secret per game code, so a retried join from this phone gets its own team back (and nobody else can).
+function joinKey(){
+  let k = LS.get('joinKey.' + code, null) || memKeys[code];
+  if (!k){ k = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''); LS.set('joinKey.' + code, k); }
+  return memKeys[code] = k;
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && me && !ws) connect(); });
+
+function onMessage(m){
+  if (m.type === 'joined'){
+    me = { teamId: m.teamId, token: m.token, name: m.name, code };
+    LS.set('team.' + code, me); LS.set('lastCode', code);
+    pendingName = null;
+  } else if (m.type === 'view'){
+    state = m; render();
+    // A guess typed while offline: send it now that we're connected and know the song is still open.
+    if ((dirty || unacked) && m.game.phase === 'play' && m.game.open && shownSong === `${m.game.gameId}-${m.game.song}`) save();
+  } else if (m.type === 'saved'){
+    if (state && m.song === state.game.song && m.seq === saveSeq){ unacked = false; setStatus(dirty ? 'Not saved yet' : 'Saved', !dirty); }
+  } else if (m.type === 'kicked'){
+    forget(); showJoin('The host removed your team.');
+  } else if (m.type === 'error'){
+    if (m.code === 'closed'){
+      const current = state && m.gameId === state.game.gameId && m.song === state.game.song;
+      if (current && m.seq === saveSeq){
+        unacked = false; dirty = false; clearTimeout(saveT);
+        setStatus('Not saved: answers for this song are closed');
+        toast(m.message);
+      }
+    }
+    else if (m.code === 'not_joined'){ forget(); showJoin(m.message); }
+    else if (['no_room','bad_team'].includes(m.code)){ forget(); showJoin(m.message); }
+    else { if (['name_taken','bad_name','full'].includes(m.code)) pendingName = null; showJoin(m.message); }
+  }
+}
+function forget(){ LS.del('team.' + code); me = null; state = null; const w = ws; ws = null; try{ w?.close(); }catch{} }
+
+/* ---------- join ---------- */
+function showJoin(err = ''){
+  $('#code').value = code; $('#joinErr').textContent = err;
+  ['connDot','teamName','teamPts'].forEach(i => $('#' + i).classList.add('hidden'));
+  view('vJoin');
+  setTimeout(() => (code ? $('#name') : $('#code')).focus(), 50);
+}
+$('#joinBtn').onclick = () => {
+  const c = $('#code').value.trim().toUpperCase(), n = $('#name').value.trim();
+  if (!/^[A-Z]{4}$/.test(c)) return $('#joinErr').textContent = 'The code has 4 letters.';
+  if (!n) return $('#joinErr').textContent = 'Pick a team name.';
+  $('#joinErr').textContent = '';
+  if (c !== code){ code = c; history.replaceState(null, '', '?c=' + c); }
+  pendingName = n;
+  if (ws?.readyState === 1 && ws.code === code && !me) send({ type: 'join', name: n, key: joinKey() });
+  else { const w = ws; ws = null; try{ w?.close(); }catch{} connect(); }
+};
+['code','name'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter') $('#joinBtn').click(); }));
+$('#leaveBtn').onclick = () => { forget(); showJoin(); };
+
+/* ---------- render ---------- */
+function render(){
+  const { game: g, team, score } = state;
+  $('#teamName').textContent = team.name;
+  $('#teamPts').innerHTML = `<b>${score}</b> pts`;
+  ['connDot','teamName','teamPts'].forEach(i => $('#' + i).classList.remove('hidden'));
+
+  if (g.phase === 'lobby' || !g.gameId) return wait('You’re in', 'Get ready', 'Waiting for the host to start the first song. Keep this page open.');
+  if (g.phase === 'loading') return wait(`Song ${pad(g.song)}`, g.total ? `Song ${g.song} of ${g.total}` : 'Next song', 'Get ready, the song is starting…');
+  if (g.phase === 'play') return renderGuess();
+  if (g.phase === 'intermission') return wait('Pens down', 'All songs played', 'The review starts in a moment. Watch the TV.');
+  if (g.phase === 'revealed' || g.phase === 'review' || g.phase === 'done') return renderResults();
+  wait('', 'Hang on', '');
+}
+function wait(title, label, text){
+  $('#waitLabel').textContent = label; $('#waitTitle').textContent = title; $('#waitText').textContent = text;
+  view('vWait');
+}
+
+function renderGuess(){
+  const g = state.game, key = `${g.gameId}-${g.song}`;
+  $('#songOf').textContent = g.total ? `Song ${g.song} of ${g.total}` : 'Now playing';
+  $('#songNo').textContent = `Song ${pad(g.song)}`;
+  if (shownSong !== key){                       // new song: reset the form
+    shownSong = key; dirty = false; unacked = false; clearTimeout(saveT);
+    $('#gTitle').value = state.myGuess?.title || '';
+    $('#gArtist').value = state.myGuess?.artist || '';
+    setStatus(state.myGuess ? 'Saved' : '', !!state.myGuess);
+  }
+  const open = g.open;
+  $('#gTitle').disabled = $('#gArtist').disabled = $('#gSave').disabled = !open;
+  $('#gLocked').classList.toggle('hidden', open);
+  $('#gHint').textContent = g.answers === 'each'
+    ? 'Fill in one or both. Your guess locks when the host reveals the answer.'
+    : 'Fill in one or both. You can change your guess until the host moves to the next song.';
+  view('vGuess');
+}
+function setStatus(text, ok){ const s = $('#gStatus'); s.textContent = text; s.classList.toggle('ok', !!ok); }
+function save(){
+  clearTimeout(saveT);
+  if (!state || state.game.phase !== 'play' || !state.game.open) return;
+  const title = $('#gTitle').value.trim(), artist = $('#gArtist').value.trim();
+  if (send({ type: 'guess', gameId: state.game.gameId, song: state.game.song, title, artist, seq: ++saveSeq })){ dirty = false; unacked = true; setStatus('Saving…'); }
+  else setStatus('Offline. Will retry when reconnected');
+}
+['gTitle','gArtist'].forEach(id => $('#' + id).addEventListener('input', () => {
+  dirty = true; setStatus('Not saved yet'); clearTimeout(saveT); saveT = setTimeout(save, 900);
+}));
+$('#gTitle').addEventListener('keydown', e => { if (e.key === 'Enter') $('#gArtist').focus(); });
+$('#gArtist').addEventListener('keydown', e => { if (e.key === 'Enter'){ save(); e.target.blur(); } });
+$('#gSave').onclick = save;
+
+function renderResults(){
+  const g = state.game;
+  const done = g.phase === 'done';
+  $('#resLabel').textContent = done ? 'Final results' : g.phase === 'review' ? `Review · song ${g.review} of ${g.total}` : `Song ${g.song} of ${g.total}`;
+  const top = state.ranking?.[0]?.score || 0, leaders = (state.ranking || []).filter(r => r.score === top);
+  const meTop = top > 0 && leaders.some(r => r.me);
+  $('#resTitle').textContent = !done ? `${state.score} point${state.score === 1 ? '' : 's'}`
+    : meTop ? (leaders.length === 1 ? 'You win' : 'It’s a tie') : 'That’s a wrap';
+
+  const rank = $('#rank');
+  rank.classList.toggle('hidden', !state.ranking);
+  rank.innerHTML = '';
+  (state.ranking || []).forEach((r, i) => {
+    const d = document.createElement('div'); if (r.me) d.className = 'me';
+    d.innerHTML = '<span></span><span></span><span></span>';
+    d.children[0].textContent = pad(i + 1); d.children[1].textContent = r.name; d.children[2].textContent = r.score;
+    rank.appendChild(d);
+  });
+
+  const list = $('#results'); list.innerHTML = '';
+  const current = g.phase === 'review' ? g.review : g.phase === 'revealed' ? g.song : 0;
+  [...state.results].reverse().forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'res' + (r.song === current ? ' current' : '');
+    row.innerHTML = `<span class="n">${pad(r.song)}</span><div class="g"></div>
+      <div class="p"><span class="chip${r.t ? ' on' : ''}">T</span><span class="chip${r.a ? ' on' : ''}">A</span></div>`;
+    const gEl = row.querySelector('.g');
+    const line = (lbl, v) => { const d = document.createElement('div'); const l = document.createElement('span'); l.className = 'label'; l.textContent = lbl; d.append(l, v || '—'); return d; };
+    if (r.guess && (r.guess.title || r.guess.artist)) gEl.append(line('Title', r.guess.title), line('Artist', r.guess.artist));
+    else gEl.innerHTML = '<span class="muted">No guess</span>';
+    list.appendChild(row);
+  });
+  $('#resListLabel').classList.toggle('hidden', !state.results.length);
+  view('vResults');
+}
+
+/* ---------- boot ---------- */
+if (code && LS.get('team.' + code, null)) { view('vWait'); wait('', 'Reconnecting', ''); connect(); }
+else showJoin();
+</script>
+</body>
+</html>
